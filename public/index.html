@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product Browser</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f5f7;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1a2e;
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+
+    header span {
+      font-size: 12px;
+      color: #6c7a9c;
+      background: #252542;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar select {
+      appearance: none;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236c7a9c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;
+      border: 1px solid #e2e5ed;
+      border-radius: 8px;
+      padding: 8px 32px 8px 12px;
+      font-size: 13px;
+      color: #1a1a2e;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .toolbar select:focus {
+      outline: none;
+      border-color: #4f6ef7;
+    }
+
+    .stats {
+      margin-left: auto;
+      font-size: 13px;
+      color: #6c7a9c;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e2e5ed;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    thead tr {
+      background: #f8f9fb;
+      border-bottom: 1px solid #e2e5ed;
+    }
+
+    th {
+      padding: 11px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6c7a9c;
+    }
+
+    th.right { text-align: right; }
+
+    td {
+      padding: 13px 16px;
+      color: #1a1a2e;
+      border-bottom: 1px solid #f0f2f5;
+      vertical-align: middle;
+    }
+
+    td.muted { color: #6c7a9c; font-size: 12px; }
+    td.price { text-align: right; font-weight: 600; color: #1a1a2e; font-variant-numeric: tabular-nums; }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover { background: #fafbff; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .name-cell {
+      font-weight: 500;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .id-cell {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px;
+      color: #9aa3b8;
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .page-info {
+      font-size: 13px;
+      color: #6c7a9c;
+    }
+
+    .btn-group { display: flex; gap: 8px; }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e5ed;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1a1a2e;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #f4f5f7;
+      border-color: #c8cdd9;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    button.primary {
+      background: #4f6ef7;
+      border-color: #4f6ef7;
+      color: #fff;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: #3a58e0;
+      border-color: #3a58e0;
+    }
+
+    .empty {
+      padding: 60px 20px;
+      text-align: center;
+      color: #6c7a9c;
+      font-size: 14px;
+    }
+
+    .loading-row td {
+      padding: 60px;
+      text-align: center;
+      color: #9aa3b8;
+    }
+
+    .dot-loader {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .dot-loader span {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4f6ef7;
+      animation: bounce 1.2s infinite;
+    }
+
+    .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+    .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>&#128722; Product Browser</h1>
+  <span id="totalBadge">200,000 products</span>
+</header>
+
+<div class="container">
+
+  <div class="toolbar">
+    <select id="categoryFilter" onchange="onCategoryChange()">
+      <option value="">All categories</option>
+    </select>
+    <select id="limitSelect" onchange="onLimitChange()">
+      <option value="20">20 per page</option>
+      <option value="50">50 per page</option>
+      <option value="100">100 per page</option>
+    </select>
+    <span class="stats" id="statsLabel">&nbsp;</span>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th class="right">Price</th>
+          <th>Created</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr class="loading-row">
+          <td colspan="5">
+            <div class="dot-loader"><span></span><span></span><span></span></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <span class="page-info" id="pageInfo">Page 1</span>
+    <div class="btn-group">
+      <button id="prevBtn" onclick="goBack()" disabled>&#8592; Previous</button>
+      <button id="nextBtn" onclick="goNext()" class="primary" disabled>Next &#8594;</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = '/api';
+
+  const BADGE_STYLES = {
+    'Electronics': 'background:#dbeafe;color:#1d4ed8',
+    'Clothing':    'background:#fce7f3;color:#9d174d',
+    'Books':       'background:#d1fae5;color:#065f46',
+    'Home & Garden':'background:#ecfdf5;color:#047857',
+    'Sports':      'background:#fef3c7;color:#92400e',
+    'Toys':        'background:#ede9fe;color:#5b21b6',
+    'Automotive':  'background:#fee2e2;color:#991b1b',
+    'Food':        'background:#fef9c3;color:#854d0e',
+    'Health':      'background:#dcfce7;color:#166534',
+    'Music':       'background:#f3e8ff;color:#6b21a8',
+    'Beauty':      'background:#fdf2f8;color:#86198f',
+    'Office':      'background:#f1f5f9;color:#475569',
+  };
+
+  let cursorStack = [];
+  let lastCursor = null;
+  let currentCategory = '';
+  let currentLimit = 20;
+  let page = 1;
+
+  function badgeHtml(cat) {
+    const style = BADGE_STYLES[cat] || 'background:#f1f5f9;color:#475569';
+    return `<span class="badge" style="${style}">${cat}</span>`;
+  }
+
+  function fmtDate(iso) {
+    return new Date(iso).toLocaleDateString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric'
+    });
+  }
+
+  function fmtPrice(p) {
+    return '$' + parseFloat(p).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function setLoading() {
+    document.getElementById('tableBody').innerHTML = `
+      <tr class="loading-row">
+        <td colspan="5"><div class="dot-loader"><span></span><span></span><span></span></div></td>
+      </tr>`;
+    document.getElementById('prevBtn').disabled = true;
+    document.getElementById('nextBtn').disabled = true;
+  }
+
+  async function fetchPage(cursor) {
+    const params = new URLSearchParams({ limit: currentLimit });
+    if (cursor) params.set('cursor', cursor);
+    if (currentCategory) params.set('category', currentCategory);
+    const res = await fetch(`${API}/products?${params}`);
+    if (!res.ok) throw new Error('API error');
+    return res.json();
+  }
+
+  async function loadPage(cursor, pushToStack) {
+    setLoading();
+    try {
+      const json = await fetchPage(cursor);
+
+      const items = json.products || json.data || [];
+      const pagination = json.pagination || {};
+      lastCursor = json.next_cursor || pagination.next_cursor || null;
+      const hasNext = json.has_next_page || pagination.has_next_page || false;
+
+      if (pushToStack && cursor) cursorStack.push(cursor);
+
+      const tbody = document.getElementById('tableBody');
+
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty">No products found.</td></tr>`;
+      } else {
+        tbody.innerHTML = items.map(p => `
+          <tr>
+            <td class="name-cell" title="${p.name}">${p.name}</td>
+            <td>${badgeHtml(p.category)}</td>
+            <td class="price">${fmtPrice(p.price)}</td>
+            <td class="muted">${fmtDate(p.created_at)}</td>
+            <td class="muted">${fmtDate(p.updated_at)}</td>
+          </tr>`).join('');
+      }
+
+      document.getElementById('prevBtn').disabled = cursorStack.length === 0;
+      document.getElementById('nextBtn').disabled = !hasNext;
+      document.getElementById('pageInfo').textContent = `Page ${page}`;
+      document.getElementById('statsLabel').textContent =
+        `Showing ${items.length} product${items.length !== 1 ? 's' : ''}${currentCategory ? ' in ' + currentCategory : ''}`;
+
+    } catch (e) {
+      document.getElementById('tableBody').innerHTML =
+        `<tr><td colspan="5" class="empty">Failed to load products. Please try again.</td></tr>`;
+    }
+  }
+
+  function goNext() {
+    if (!lastCursor) return;
+    page++;
+    loadPage(lastCursor, true);
+  }
+
+  function goBack() {
+    if (cursorStack.length === 0) return;
+    page--;
+    cursorStack.pop();
+    const prev = cursorStack.length > 0 ? cursorStack[cursorStack.length - 1] : null;
+    loadPage(prev, false);
+  }
+
+  function onCategoryChange() {
+    currentCategory = document.getElementById('categoryFilter').value;
+    cursorStack = []; lastCursor = null; page = 1;
+    loadPage(null, false);
+  }
+
+  function onLimitChange() {
+    currentLimit = parseInt(document.getElementById('limitSelect').value);
+    cursorStack = []; lastCursor = null; page = 1;
+    loadPage(null, false);
+  }
+
+  async function loadCategories() {
+    try {
+      const res = await fetch(`${API}/products/categories`);
+      const cats = await res.json();
+      const sel = document.getElementById('categoryFilter');
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        sel.appendChild(opt);
+      });
+    } catch (e) {}
+  }
+
+  loadCategories();
+  loadPage(null, false);
+</script>
+
+</body>
+</html>
